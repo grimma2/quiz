@@ -5,6 +5,8 @@ import logging
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+SECONDS_FOR_SINGLE_POINT = 1
+
 SYMBOLS_IN_TEAM_CODE = 5
 
 logging.basicConfig(level=logging.DEBUG, filename='log.log', filemode='w',

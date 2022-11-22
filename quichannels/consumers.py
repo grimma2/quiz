@@ -1,11 +1,9 @@
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 
-from quiz.settings import SECRET_KEY
-
 from .utils import (
     code_is_valid, change_game_state, NextQuestionSender,
-    GroupMessageSender, UpdateLeaderBoardEvent, SecretKeyValidation
+    GroupMessageSender, UpdateLeaderBoardEvent
 )
 
 from team.models import Team
@@ -43,6 +41,7 @@ class TeamConsumer(NextQuestionSender, UpdateLeaderBoardEvent, WebsocketConsumer
         self.team.refresh_from_db(fields=['timer'])
         if text_data_json['type'] == 'next_question':
             try:
+                print(f"bonus: {text_data_json['bonus_points']}")
                 self.send_to_next_question(self.team, text_data_json['bonus_points'])
             except Exception as e:
                 print(e)
@@ -60,10 +59,9 @@ class TeamConsumer(NextQuestionSender, UpdateLeaderBoardEvent, WebsocketConsumer
         }))
 
 
-class GameConsumer(SecretKeyValidation, UpdateLeaderBoardEvent, GroupMessageSender, WebsocketConsumer):
+class GameConsumer(UpdateLeaderBoardEvent, GroupMessageSender, WebsocketConsumer):
 
     def connect(self):
-        self.validate_connect()
         game_pk = self.scope['url_route']['kwargs']['game_pk']
         self.game_name = f"{game_pk}_game"
         self.game = Game.objects.filter(pk=game_pk).prefetch_related('team_set')
@@ -98,10 +96,9 @@ class GameConsumer(SecretKeyValidation, UpdateLeaderBoardEvent, GroupMessageSend
         }))
 
 
-class TimerConsumer(SecretKeyValidation, UpdateLeaderBoardEvent, NextQuestionSender, WebsocketConsumer):
+class TimerConsumer(UpdateLeaderBoardEvent, NextQuestionSender, WebsocketConsumer):
 
     def connect(self):
-        self.validate_connect()
         self.accept()
 
     def receive(self, text_data):
@@ -109,7 +106,7 @@ class TimerConsumer(SecretKeyValidation, UpdateLeaderBoardEvent, NextQuestionSen
         team = Team.objects.get(code=text_data)
         print(f'{team=}')
         try:
-            self.send_to_next_question(team)
+            self.send_to_next_question(team, bonus_points=0)
         except Exception as e:
             print(e)
         print('question was send')
@@ -117,15 +114,12 @@ class TimerConsumer(SecretKeyValidation, UpdateLeaderBoardEvent, NextQuestionSen
         self.close()
 
 
-class GameChangeState(SecretKeyValidation, WebsocketConsumer):
+class GameChangeState(WebsocketConsumer):
 
     def connect(self):
-        print('dsfsghfjkl;hglfkdhss')
-        self.validate_connect()
         self.accept()
 
     def receive(self, text_data):
-        print('receive GameChangeState')
         text_data_json = json.loads(text_data)
         print(text_data_json)
         try:

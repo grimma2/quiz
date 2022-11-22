@@ -43,8 +43,8 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'channels',
-    'rest_framework',
     'corsheaders',
+    'rest_framework',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -59,9 +59,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

@@ -1,5 +1,4 @@
 import json
-import logging
 from datetime import datetime, date
 from dataclasses import dataclass
 
@@ -7,8 +6,6 @@ from asgiref.sync import async_to_sync
 from django.db.models import F
 
 from .tasks import set_timer, send_state_to_consumer
-
-from quiz.settings import SECRET_KEY
 
 from team.models import Team, Timer
 from team.utils import get_team_question
@@ -46,17 +43,18 @@ def all_teams_finished(finished_team_question: int, game: Game) -> bool:
 
 
 def change_game_state(game: Game, state, revoke_timers=True) -> None:
-    print('change_game_state')
-    game.game_state = state
-    game.save()
-    dependency = GameTimersDependency(game=game)
 
     if state == 'OFF':
         game_off_team_basics(game, revoke_timers)
-        LeaderBoardFetcher(game=game).board.finish()
+        fetcher = LeaderBoardFetcher(game=game)
+        fetcher.board.finish()
     else:
+        dependency = GameTimersDependency(game=game)
         LeaderBoard.objects.create(game=game)
         dependency.set_timers()
+
+    game.game_state = state
+    game.save()
 
 
 class GroupMessageSender:
@@ -76,18 +74,13 @@ class GameTimersDependency:
     game: Game
 
     def set_timers(self):
-        print('set_timers')
-        logging.getLogger('DL').info('set_timers...')
         ques_time = datetime.combine(date.min, self.game.question_time) - datetime.min
         for team in self.game.team_set.all():
-            print(f'{team.code=}')
             task = set_timer.apply_async(args=[ques_time.total_seconds(), team.code])
-            print(f'{task.state=}')
             team.timer = Timer.objects.create(task_id=task.id)
             team.save()
 
     def revoke_timers(self):
-        print('revoke_timers')
         for team in self.game.team_set.all():
             print(f'{team.timer=}')
             if not team.timer:
@@ -117,18 +110,20 @@ class NextQuestionSender(GroupMessageSender):
         team.active_question = F('active_question') + 1
         team.bonus_points = F('bonus_points') + bonus_points
         team.save()
-        team.refresh_from_db(fields=['active_question'])
+        team.refresh_from_db()
         questions = team.game.question_set.all()
 
         question = get_team_question(team.active_question, questions)
 
         if question:
             # set new timer if new question has begun
-            team.timer.restart()
+            team.timer.restart(
+                code=team.code,
+                question_time=team.game.question_time
+            )
             return QuestionSerializer(question).data
         else:
             # delete timer if question not run anymore
-            print('delete timer')
             team.timer.delete()
 
             fetcher = LeaderBoardFetcher(game=team.game)
@@ -158,15 +153,7 @@ class NextQuestionSender(GroupMessageSender):
 class UpdateLeaderBoardEvent:
 
     def update_leader_board(self, event):
-        print(event)
         self.send(text_data=json.dumps({
             'event': 'update_leader_board',
             'event_data': event['event_data'],
         }))
-
-
-class SecretKeyValidation:
-
-    def validate_connect(self):
-        if not self.scope['url_route']['kwargs']['secret_key'] == SECRET_KEY:
-            raise Exception('invalid SECRET_KEY')

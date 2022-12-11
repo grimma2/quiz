@@ -4,7 +4,7 @@ from .models import Game, Question, LeaderBoard, FinishTeam
 
 
 class GameAdmin(admin.ModelAdmin):
-    list_display = ('name', 'users_in_team_lim', 'question_time', 'game_state', 'pk')
+    list_display = ('name', 'question_time', 'game_state', 'pk')
     list_display_links = ('name', 'pk')
 
 

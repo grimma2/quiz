@@ -34,15 +34,15 @@ class GameDetail(APIView):
         return Response(serializer.data)
 
 
-class SetGameState(APIView):
-
-    @staticmethod
-    def post(request):
-        game = Game.objects.get(pk=request.data['pk'])
-        game.game_state = request.data['game_state']
-        game.save()
-
-        return Response(status=200)
+# class SetGameState(APIView):
+#
+#     @staticmethod
+#     def post(request):
+#         game = Game.objects.get(pk=request.data['pk'])
+#         game.game_state = request.data['game_state']
+#         game.save()
+#
+#         return Response(status=200)
 
 
 class DeleteGameDetail(APIView):
@@ -103,3 +103,41 @@ class QuestionTime(APIView):
         )
         time = datetime.combine(date.min, game.question_time) - datetime.min
         return Response(data={'time': int(time.total_seconds())})
+
+
+class GetGamesCookie(APIView):
+
+    @staticmethod
+    def post(request):
+        print(request.COOKIES)
+        if 'gamesPks' in request.COOKIES:
+            print(f"cookie: {request.COOKIES['gamesPks']}")
+            response = Response(data=request.COOKIES['gamesPks'])
+        else:
+            print('cookie not exists')
+            print(request.is_secure())
+            response = Response(data='[]')
+            response.set_cookie(
+                'gamesPks',
+                '[]',
+                secure=request.is_secure(),
+                httponly=True,
+                expires='Fri, 31 Dec 9999 23:59:59 GMT'
+            )
+
+        return response
+
+
+class SetGamesCookie(APIView):
+
+    @staticmethod
+    def post(request):
+        response = Response()
+        response.set_cookie(
+            'gamesPks',
+            request.data['gamesPks'],
+            secure=request.is_secure(),
+            httponly=True,
+            expires='Fri, 31 Dec 9999 23:59:59 GMT'
+        )
+        return response

@@ -47,7 +47,6 @@ class Timer(models.Model):
         self.save()
 
 
-
 class Team(models.Model):
     name = models.CharField('Название команды', max_length=255)
     game = models.ForeignKey('game.Game', on_delete=models.CASCADE)

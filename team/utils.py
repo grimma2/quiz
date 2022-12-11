@@ -1,6 +1,6 @@
+from dataclasses import dataclass
 import logging
 from datetime import datetime, date
-from dataclasses import dataclass
 
 from django.db.models import QuerySet
 from django.utils import timezone

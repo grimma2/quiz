@@ -15,9 +15,14 @@ logger = logging.getLogger('DL')
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.FileHandler(filename='log.log'))
 
+SESSION_COOKIE_SAMESITE = None
+CRSF_COOKIE_SAMESITE = None
+
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:8080'
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 # CHANNEL_LAYERS = {
 #     "default": {
@@ -43,8 +48,8 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'channels',
-    'corsheaders',
     'rest_framework',
+    'corsheaders',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -59,9 +64,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

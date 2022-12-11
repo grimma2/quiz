@@ -1,6 +1,6 @@
 import json
-from datetime import datetime, date
 from dataclasses import dataclass
+from datetime import datetime, date
 
 from asgiref.sync import async_to_sync
 from django.db.models import F
@@ -13,11 +13,6 @@ from team.utils import get_team_question
 from game.models import Game, FinishTeam, LeaderBoard
 from game.serializers import QuestionSerializer
 from game.utils import LeaderBoardFetcher
-
-
-def code_is_valid(team: Team) -> None:
-    if not team:
-        raise Exception('Team with this code not found')
 
 
 def game_off_team_basics(game: Game, revoke_timers=True) -> None:
@@ -82,7 +77,7 @@ class GameTimersDependency:
 
     def revoke_timers(self):
         for team in self.game.team_set.all():
-            print(f'{team.timer=}')
+            print(f'{team.timer}')
             if not team.timer:
                 return
 
@@ -138,7 +133,15 @@ class NextQuestionSender(GroupMessageSender):
             print('all_teams_finished')
             # turn off game if all teams are finished
             change_game_state(team.game, state='OFF', revoke_timers=False)
-            send_state_to_consumer.apply_async(args=['OFF', team.game.pk])
+            print('before send')
+            async_to_sync(self.channel_layer.group_send)(
+                f'{team.game.pk}_game',
+                {
+                    'type': 'game_socket_change_state',
+                    'event_data': 'OFF'
+                }
+            )
+
             self.send_to_all(team.game, {'type': 'change_state', 'event_data': Game.GameState.OFF})
         else:
             parsed_data = fetcher.parse()
@@ -157,3 +160,20 @@ class UpdateLeaderBoardEvent:
             'event': 'update_leader_board',
             'event_data': event['event_data'],
         }))
+
+
+@dataclass(kw_only=True)
+class TeamConsumerValidator:
+    team: Team
+
+    def is_all_valid(self):
+        self.is_code_valid()
+        self.is_conn_count_valid()
+
+    def is_code_valid(self):
+        if not self.team:
+            raise Exception('Team with this code not found')
+
+    def is_conn_count_valid(self):
+        pass
+

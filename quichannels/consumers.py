@@ -2,8 +2,8 @@ from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 
 from .utils import (
-    code_is_valid, change_game_state, NextQuestionSender,
-    GroupMessageSender, UpdateLeaderBoardEvent
+    change_game_state, NextQuestionSender,
+    GroupMessageSender, UpdateLeaderBoardEvent, TeamConsumerValidator
 )
 
 from team.models import Team
@@ -21,7 +21,8 @@ class TeamConsumer(NextQuestionSender, UpdateLeaderBoardEvent, WebsocketConsumer
             Team.objects.filter(code=self.code).select_related('game').prefetch_related('game__question_set').first()
         )
         self.team_name = f'{self.code}_team'
-        code_is_valid(self.team)
+        TeamConsumerValidator(team=self.team).is_all_valid()
+        # print(get_channel_layer().group_channels(self.team_name))
 
         async_to_sync(self.channel_layer.group_add)(
             self.team_name,
@@ -53,6 +54,12 @@ class TeamConsumer(NextQuestionSender, UpdateLeaderBoardEvent, WebsocketConsumer
         }))
 
     def change_state(self, event):
+        self.send(text_data=json.dumps({
+            'event': 'change_state',
+            'event_data': event['event_data'],
+        }))
+
+    def game_socket_change_state(self, event):
         self.send(text_data=json.dumps({
             'event': 'change_state',
             'event_data': event['event_data'],

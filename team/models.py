@@ -52,7 +52,7 @@ class Team(models.Model):
     game = models.ForeignKey('game.Game', on_delete=models.CASCADE)
     code = models.CharField(
         'Код вступления в команду',
-        default=CodeGenerator.generate_code(),
+        default=CodeGenerator.generate_code,
         max_length=SYMBOLS_IN_TEAM_CODE,
         unique=True
     )
@@ -61,6 +61,7 @@ class Team(models.Model):
         Timer, on_delete=models.SET_NULL, related_name='team', blank=True, null=True
     )
     bonus_points = models.PositiveIntegerField('Баллы команды', default=0)
+    remain_answers = models.JSONField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
         while True:

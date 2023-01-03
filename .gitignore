@@ -6,6 +6,17 @@ __pycache__/
 # C extensions
 *.so
 
+quiz/
+.gitignore
+LICENSE
+log.log
+manage.py
+README.md
+requirements.txt
+
+team/migrations/0*.py
+game/migrations/0*.py
+quichannels/migrations/0*.py
 # Distribution / packaging
 .Python
 build/

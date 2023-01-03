@@ -34,17 +34,6 @@ class GameDetail(APIView):
         return Response(serializer.data)
 
 
-# class SetGameState(APIView):
-#
-#     @staticmethod
-#     def post(request):
-#         game = Game.objects.get(pk=request.data['pk'])
-#         game.game_state = request.data['game_state']
-#         game.save()
-#
-#         return Response(status=200)
-
-
 class DeleteGameDetail(APIView):
 
     @staticmethod
@@ -59,7 +48,6 @@ class CreateGame(APIView):
 
     @staticmethod
     def post(request):
-        logging.getLogger('DL').info(f'{request.data=}')
         game = Game.objects.create(**parse_non_foreign_key(request.data))
 
         update_foreign_key(Question, game, request.data['question_set'], game.question_set)
@@ -109,13 +97,9 @@ class GetGamesCookie(APIView):
 
     @staticmethod
     def post(request):
-        print(request.COOKIES)
         if 'gamesPks' in request.COOKIES:
-            print(f"cookie: {request.COOKIES['gamesPks']}")
             response = Response(data=request.COOKIES['gamesPks'])
         else:
-            print('cookie not exists')
-            print(request.is_secure())
             response = Response(data='[]')
             response.set_cookie(
                 'gamesPks',

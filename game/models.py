@@ -21,10 +21,21 @@ class Game(models.Model):
 
 
 class Question(models.Model):
+
+    class QuestionType(models.TextChoices):
+        default = 'default', _('default type of question')
+        blitz = 'blitz', _('blitz type of question')
+
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     text = models.TextField('Текст вопроса')
     order = models.PositiveSmallIntegerField(default=1)
     correct_answers = models.JSONField('Правильные ответы на вопрос', default=list)
+    question_type = models.CharField(
+        'Тип вопроса',
+        choices=QuestionType.choices,
+        default=QuestionType.default,
+        max_length=50
+    )
 
     class Meta:
         ordering = ['order']
@@ -37,7 +48,6 @@ class LeaderBoard(models.Model):
     already_end = models.BooleanField('Игра окончена', default=False)
 
     def finish(self):
-        print('finish')
         self.end_date = timezone.now()
         self.already_end = True
 
@@ -47,8 +57,6 @@ class LeaderBoard(models.Model):
             )
 
         self.save()
-        self.refresh_from_db()
-        print(self.already_end)
 
 
 class FinishTeam(models.Model):

@@ -9,7 +9,7 @@ class GameAdmin(admin.ModelAdmin):
 
 
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('game', 'text', 'order', 'correct_answers', 'pk')
+    list_display = ('game', 'text', 'order', 'correct_answers', 'question_type', 'pk')
     list_display_links = ('text', 'pk')
 
 

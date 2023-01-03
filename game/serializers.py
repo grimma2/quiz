@@ -16,7 +16,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ('text', 'order', 'correct_answers', 'pk')
+        fields = ('text', 'order', 'correct_answers', 'question_type', 'pk')
 
 
 class GameDetailSerializer(serializers.ModelSerializer):
